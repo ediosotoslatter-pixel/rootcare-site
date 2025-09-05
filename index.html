@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="assets/css/ecosistema.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RootCare | Smart irrigation for small spaces</title>
+  <meta name="description" content="RootCare: greenhouse prototype with pulse irrigation, ESP8266 Wi-Fi control, species profiles, and real-time monitoring."/>
+  <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+  <style>
+    :root{--bg:#0b0f1a;--card:#101728;--muted:#94a3b8;--text:#e6edf6;--brand:#6ee7b7;--brand-2:#60a5fa;--accent:#f472b6;--ring:rgba(110,231,183,.35)}
+    *{box-sizing:border-box;scroll-behavior:smooth}
+    html,body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,rgba(96,165,250,.12),transparent 60%),radial-gradient(1000px 600px at -10% 10%,rgba(110,231,183,.10),transparent 60%),var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;-webkit-text-size-adjust:100%}
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    .container{width:min(1200px,92%);margin-inline:auto}
+    .btn{display:inline-flex;align-items:center;gap:.6rem;padding:.85rem 1.1rem;border-radius:999px;background:linear-gradient(90deg,var(--brand),var(--brand-2));color:#0b0f1a;font-weight:700;border:none;cursor:pointer;box-shadow:0 10px 30px -10px var(--ring);min-height:44px}
+    .btn.secondary{background:#121a2f;color:var(--text);border:1px solid #1f2942}
+    header{position:sticky;top:0;backdrop-filter:blur(8px);background:linear-gradient(180deg,rgba(11,15,26,.85),rgba(11,15,26,.45) 60%,transparent);z-index:10;border-bottom:1px solid rgba(255,255,255,.04);padding-top:max(.25rem, env(safe-area-inset-top))}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:.8rem 0;position:relative}
+    .logo{display:flex;align-items:center;gap:.6rem;font-weight:800;letter-spacing:.5px}
+    .logo .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(90deg,var(--brand),var(--brand-2))}
+    .nav-links{display:flex;gap:1rem;align-items:center}
+    .nav-toggle{display:none;background:#121a2f;border:1px solid #1f2942;border-radius:10px;padding:.45rem .6rem;color:var(--text);cursor:pointer}
+    .chip{display:inline-flex;gap:.4rem;align-items:center;border:1px solid #224;padding:.3rem .55rem;border-radius:999px;min-height:44px}
+
+    .hero{padding:clamp(2rem,4vw,4rem) 0 2rem;display:grid;grid-template-columns:1.2fr .8fr;gap:2rem;align-items:center}
+    .hero h1{font-size:clamp(2rem,4vw,3.4rem);line-height:1.1;margin:.3rem 0 .8rem}
+    .pill{display:inline-flex;gap:.5rem;align-items:center;border:1px solid #223055;padding:.35rem .6rem;border-radius:999px;color:var(--muted);font-size:.9rem}
+    .hero-card{position:relative;border:1px solid #1f2a44;background:linear-gradient(180deg,rgba(16,23,40,.6),rgba(16,23,40,.35));border-radius:18px;overflow:hidden;padding:1.1rem}
+    .glow{position:absolute;inset:-40% -20% auto auto;width:520px;height:520px;background:radial-gradient(closest-side,rgba(110,231,183,.18),transparent 70%);filter:blur(16px);pointer-events:none}
+    .grid{display:grid;gap:1rem}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1rem}
+    .kpi{padding:1rem;border-radius:14px;border:1px solid #1e2a46;background:#0f172a}
+    .kpi strong{font-size:1.5rem}
+    h2{font-size:clamp(1.4rem,2.6vw,2.1rem);margin:0 0 .6rem}
+    section{padding:clamp(2rem,4.5vw,4rem) 0;border-top:1px solid rgba(255,255,255,.05);scroll-margin-top:72px}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+    .card{border:1px solid #1e2a46;border-radius:16px;background:linear-gradient(180deg,rgba(16,23,40,.7),rgba(16,23,40,.4));padding:1rem}
+    .card h3{margin:.2rem 0 .3rem}
+    .how{display:grid;grid-template-columns:1.1fr .9fr;gap:1.5rem}
+    .steps{display:grid;gap:.8rem}
+    .step{display:grid;grid-template-columns:auto 1fr;gap:.8rem;align-items:start;padding:.8rem;border-radius:12px;border:1px dashed #234;transition:.25s background}
+    .step.active{background:rgba(96,165,250,.08)}
+    .badges{display:flex;gap:.5rem;flex-wrap:wrap}
+    .badge{border:1px solid #1f2a44;border-radius:999px;padding:.35rem .55rem;font-size:.85rem;color:var(--muted)}
+    .tabs{display:flex;gap:.5rem;margin:.8rem 0}
+    .tab{padding:.5rem .8rem;border-radius:999px;border:1px solid #1f2a44;cursor:pointer}
+    .tab.active{background:linear-gradient(90deg,rgba(110,231,183,.18),rgba(96,165,250,.18));border-color:#2b3b61}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .list{display:grid;gap:.4rem;color:var(--muted)}
+    .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem}
+    .tile{aspect-ratio:16/10;border:1px solid #1e2a46;border-radius:12px;display:grid;place-items:center;background:#0f172a;color:#99f6e4}
+    .team{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem}
+    .member{padding:1rem;border:1px solid #1e2a46;border-radius:14px;background:#0f172a}
+    footer{padding:2rem 0;color:var(--muted)}
+
+    /* Solution watermark */
+    #solution{position:relative;overflow:hidden}
+    #solution > .container{position:relative;z-index:1}
+    .solution-watermark{
+      position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+      width:clamp(420px,65vw,980px);height:auto;opacity:.12;
+      pointer-events:none;filter:grayscale(1) contrast(1.05);z-index:0
+    }
+
+    /* Mobile */
+    @media (max-width:920px){
+      .nav{gap:.6rem}
+      .nav-toggle{display:inline-flex}
+      .nav-links{display:none;flex-direction:column;align-items:flex-start;gap:.6rem;
+        position:absolute;right:1rem;top:60px;background:#0f172a;border:1px solid #1e2a46;
+        padding:.8rem;border-radius:12px;z-index:20}
+      .nav-links.open{display:flex}
+
+      .hero{grid-template-columns:1fr}
+      .cards{grid-template-columns:1fr}
+      .how{grid-template-columns:1fr}
+      .team{grid-template-columns:1fr 1fr}
+      .two-col{grid-template-columns:1fr}
+      .kpis{grid-template-columns:1fr 1fr 1fr}
+      .gallery{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:600px){
+      .kpis{grid-template-columns:1fr}
+      section{padding:1.5rem 0}
+      .hero{padding:1.5rem 0}
+    }
+
+    /* Eco popup on small screens */
+    .eco-pop{max-width:90vw;z-index:15}
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="container nav">
+      <div class="logo"><span class="dot"></span> ROOTCARE by SynaptIA</div>
+
+      <button class="nav-toggle" aria-expanded="false" aria-controls="primary-nav" aria-label="Open menu">☰</button>
+
+      <nav id="primary-nav" class="nav-links">
+        <a href="#challenge" class="chip">Challenge</a>
+        <a href="#solution" class="chip">Solution</a>
+        <a href="#how" class="chip">How it works</a>
+        <a href="#assembly" class="chip">Assembly</a>
+        <a href="#evidence" class="chip">Evidence</a>
+        <a href="#team" class="chip">Team</a>
+        <a href="#demo" class="btn">View demo</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero container" id="home">
+      <div>
+        <span class="pill">Automatic irrigation · Wi-Fi · Species profiles</span>
+        <h1>Make your plants thrive with <span style="background:linear-gradient(90deg,#6ee7b7,#60a5fa);-webkit-background-clip:text;background-clip:text;color:transparent">RootCare</span></h1>
+        <p style="color:var(--muted)">Greenhouse prototype with pulse irrigation, moisture sensor, and ESP8266 control. Optimizes water use, reduces operational friction, and simplifies care in apartments and micro-farming.</p>
+        <div class="cta">
+          <a class="btn" href="#solution">See solution</a>
+          <a class="btn secondary" href="#video">Watch video</a>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div>Water use</div><strong>Only when required</strong><div class="note">Pulse irrigation with moisture threshold.</div></div>
+          <div class="kpi"><div>Control</div><strong>Wi-Fi + LCD</strong><div class="note">Simple web UI + on-screen feedback.</div></div>
+          <div class="kpi"><div>Profiles</div><strong>By plant type</strong><div class="note">Parameters tailored by species.</div></div>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="glow"></div>
+        <div style="aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden">
+          <iframe width="100%" height="100%" src="https://www.youtube.com/embed/Uq_3Y0Yeg-E" title="RootCare promotional video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem .2rem">
+          <span class="note">Promotional video</span>
+          <a class="chip" href="https://www.youtube.com/watch?v=Uq_3Y0Yeg-E" target="_blank" rel="noopener">Watch on YouTube</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="challenge">
+      <div class="container">
+        <h2>Challenge: compact cities and water crisis</h2>
+        <p class="note">Urbanization → apartments without yards. Global water crisis that in Chile affects ≈76% of the territory. Consumption priorities shift to health, sustainability, and home gardens.</p>
+        <div class="cards" style="margin-top:1rem">
+          <div class="card"><h3>Limited space</h3><p class="note">Apartments dominate housing. Traditional gardening does not fit.</p></div>
+          <div class="card"><h3>Irrigation efficiency</h3><p class="note">Water is critical. Precision and “only when needed” triggering are required.</p></div>
+          <div class="card"><h3>Consumer habits</h3><p class="note">Higher demand for fresh food and stress-relief activities like growing.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="solution">
+      <!-- Watermark logo -->
+      <img class="solution-watermark" src="assets/logo/rootcare.png" alt="" aria-hidden="true" />
+      <div class="container">
+        <h2>Solution: RootCare</h2>
+        <div class="two-col">
+          <div>
+            <p class="note">Compact greenhouse prototype with automated pulse irrigation. Designed by UA Industrial Engineering students with faculty guidance. Focused on low cost and scalability.</p>
+            <div class="cards" style="grid-template-columns:1fr 1fr">
+              <div class="card"><h3>Water savings</h3><p class="note">Irrigates only when the soil asks for it. No overwatering.</p></div>
+              <div class="card"><h3>Better growth</h3><p class="note">Stable moisture = healthy roots + controlled water stress.</p></div>
+              <div class="card"><h3>Simple operation</h3><p class="note">Per-plant profiles and remote monitoring. Zero learning curve.</p></div>
+              <div class="card"><h3>Ready to iterate</h3><p class="note">Modular architecture: sensor → logic → actuator.</p></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Prototype stack</h3>
+            <ul class="list">
+              <li>ESP8266 with Wi-Fi as the brain.</li>
+              <li>Soil moisture sensor for decisions.</li>
+              <li>Pulse irrigation controlled by relay/valve.</li>
+              <li>1602 LCD for local status.</li>
+              <li>Web UI to select species.</li>
+            </ul>
+            <div class="badges" style="margin-top:.8rem">
+              <span class="badge">Low cost</span>
+              <span class="badge">Scalable</span>
+              <span class="badge">Plug-and-play</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="container how">
+        <div>
+          <h2>How it works</h2>
+          <div class="steps" id="steps">
+            <div class="step active"><div>1</div><div><strong>Read moisture</strong><div class="note">Real-time sensor defines whether irrigation is needed.</div></div></div>
+            <div class="step"><div>2</div><div><strong>Plant profile</strong><div class="note">Configurable thresholds per species.</div></div></div>
+            <div class="step"><div>3</div><div><strong>Decision on ESP8266</strong><div class="note">Wi-Fi connectivity and control logic.</div></div></div>
+            <div class="step"><div>4</div><div><strong>Pulse irrigation</strong><div class="note">Activates valve/relay only for the necessary seconds.</div></div></div>
+            <div class="step"><div>5</div><div><strong>Feedback</strong><div class="note">LCD and web UI report live status.</div></div></div>
+          </div>
+          <div class="tabs" id="featureTabs">
+            <button class="tab active" data-pane="auto">Automatic irrigation</button>
+            <button class="tab" data-pane="remote">Remote monitoring</button>
+            <button class="tab" data-pane="quick">Quick access</button>
+          </div>
+          <div id="pane-auto" class="card"><h3>Automatic irrigation</h3><p class="note">Control around the optimal moisture point. Less water. Healthier roots.</p></div>
+          <div id="pane-remote" class="card" style="display:none"><h3>Remote monitoring</h3><p class="note">On the local network you see status, short history, and basic alerts.</p></div>
+          <div id="pane-quick" class="card" style="display:none"><h3>Quick access</h3><p class="note">Minimal UI to pick a plant and view status at a glance.</p></div>
+        </div>
+        <div>
+          <div class="tile" style="height:320px">Web Interface (placeholder)</div>
+          <div class="note" style="margin-top:.6rem">Tip: replace this card with a screenshot of your real UI (./assets/ui-web.png).</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="evidence">
+      <div class="container">
+        <h2>Evidence of need</h2>
+        <div class="two-col">
+          <div class="card">
+            <h3>Local survey (n≈50)</h3>
+            <ul class="list">
+              <li>High demand for <strong>automatic irrigation</strong>.</li>
+              <li>Explicit interest in <strong>remote monitoring</strong>.</li>
+              <li>Drivers: fresh food and convenience.</li>
+            </ul>
+            <p class="note">Trend aligned with the global shift toward health and sustainability.</p>
+          </div>
+          <div class="card">
+            <h3>Practical benefit</h3>
+            <ul class="list">
+              <li>Less time spent on manual care.</li>
+              <li>Lower risk of over/under-watering.</li>
+              <li>Higher success rate in small spaces.</li>
+            </ul>
+            <div class="badges" style="margin-top:.6rem">
+              <span class="badge">Apartment-friendly</span>
+              <span class="badge">Urban gardens</span>
+              <span class="badge">Small-scale farming</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="audience">
+      <div class="container">
+        <h2>Target audience</h2>
+        <div class="two-col">
+          <div class="card">
+            <h3>Busy Urban Dwellers</h3>
+            <p class="note">People in apartments with little time. They want automation and zero friction.</p>
+          </div>
+          <div class="card">
+            <h3>Small-scale Farmers</h3>
+            <p class="note">Producers at smaller scale who need reliability and water savings.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="ecosystem">
+      <div class="container">
+        <h2>Ecosystem</h2>
+
+        <div class="ecosistema-grid">
+          <div class="eco-tile"
+               style="background-image:url('assets/ecosistema/Sensor.webp')"
+               data-title="Sensor"
+               data-desc="Measures substrate moisture in real time.">
+          </div>
+
+          <div class="eco-tile"
+               style="background-image:url('assets/ecosistema/esp8226.webp')"
+               data-title="ESP8266"
+               data-desc="Wi-Fi microcontroller. Runs logic and profiles.">
+          </div>
+
+          <div class="eco-tile"
+               style="background-image:url('assets/ecosistema/valvula.webp')"
+               data-title="Relay + Valve"
+               data-desc="Pulse actuation to open and close the flow.">
+          </div>
+
+          <div class="eco-tile"
+               style="background-image:url('assets/ecosistema/LCD.webp')"
+               data-title="LCD"
+               data-desc="Shows moisture, active profile, and irrigation events.">
+          </div>
+
+          <div class="eco-tile"
+               style="background-image:url('assets/ecosistema/parametros.webp')"
+               data-title="Web UI"
+               data-desc="Species selection and monitoring from the browser.">
+          </div>
+
+          <div class="eco-tile"
+               style="background-image:url('assets/ecosistema/plantas.webp')"
+               data-title="Plant profiles"
+               data-desc="Moisture thresholds adapted by species.">
+          </div>
+        </div>
+
+        <!-- Reusable popup -->
+        <div id="eco-pop" class="eco-pop" role="dialog" aria-hidden="true">
+          <h4></h4>
+          <p></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="interfaces">
+      <div class="container">
+        <h2>Interfaces</h2>
+        <div class="two-col">
+
+          <!-- LCD screen -->
+          <div class="card" style="text-align:center;">
+            <picture>
+              <source type="image/webp" srcset="assets/ui/lcd.webp">
+              <img 
+                src="assets/ui/lcd.Webp" 
+                alt="RootCare LCD screen" 
+                loading="lazy"
+                style="
+                  width:100%;
+                  max-width:400px;
+                  max-height:450px;
+                  object-fit:contain;
+                  border-radius:12px;
+                  display:block;
+                  margin:auto;
+                "
+              />
+            </picture>
+            <h3 style="margin-top:.8rem;">LCD screen</h3>
+            <p class="note">Status: moisture, active profile, and irrigation events.</p>
+          </div>
+
+          <!-- RootCare app -->
+          <div class="card" style="text-align:center;">
+            <picture>
+              <source type="image/webp" srcset="assets/ui/app.webp">
+              <img 
+                src="assets/ui/app.webp" 
+                alt="RootCare app" 
+                loading="lazy"
+                style="
+                  width:100%;
+                  max-width:400px;
+                  max-height:450px;
+                  object-fit:contain;
+                  border-radius:12px;
+                  display:block;
+                  margin:auto;
+                "
+              />
+            </picture>
+            <h3 style="margin-top:.8rem;">RootCare App</h3>
+            <p class="note">Plant selection, moisture reading, and manual control.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Prototype assembly as an additional section -->
+    <section id="assembly">
+      <div class="container">
+        <h2>Prototype assembly</h2>
+        <div class="two-col" style="align-items:start">
+          <div class="card">
+            <h3>Build steps</h3>
+            <ol class="list" style="gap:.6rem">
+              <li>Install the <strong>moisture sensor</strong> halfway into the substrate.</li>
+              <li>Connect the <strong>valve/relay</strong> to the irrigation line and to the power source.</li>
+              <li>Mount the <strong>ESP8266</strong> and wire sensor + relay per the diagram.</li>
+              <li>Power the system and check initial status on the <strong>LCD</strong>.</li>
+              <li>From the <strong>web UI</strong>, select the plant profile and test pulse irrigation.</li>
+            </ol>
+          </div>
+          <div class="card" style="padding:0;overflow:hidden">
+            <img src="assets/ecosistema/ecosistema-montaje.jpg"
+              alt="RootCare assembly"
+              style="max-height:500px;width:auto;border-radius:12px;display:block;margin:auto;object-fit:contain">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem .8rem"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="demo">
+      <div class="container">
+        <h2 id="video">Prototype in action</h2>
+        <div class="two-col" style="align-items:start">
+          <div class="card" style="padding:0;overflow:hidden">
+            <video controls playsinline style="width:100%;height:auto;display:block">
+              <source src="assets/demo/demo-video.mp4" type="video/mp4">
+              Your browser does not support video.
+            </video>
+          </div>
+          <div>
+            <div class="gallery">
+              <a class="tile" href="https://youtube.com/shorts/G2UjXwBnqtg?feature=share" target="_blank" rel="noopener">Short 1</a>
+              <a class="tile" href="https://youtube.com/shorts/LiLZ_pHBOfM?feature=share" target="_blank" rel="noopener">Short 2</a>
+              <a class="tile" href="https://youtube.com/shorts/G2UjXwBnqtg?feature=share" target="_blank" rel="noopener">Short 3</a>
+            </div>
+            <p class="note" style="margin-top:.6rem">Click to watch short prototype videos.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="team">
+      <div class="container">
+        <h2>Meet our team</h2>
+
+        <div class="team">
+          <div class="member">
+            <img src="assets/team/Mathias.webp" srcset="assets/team/Mathias.webp 1x" alt="Mathias Deumacán" loading="lazy" width="250" height="250" style="width:150px;height:150px;object-fit:cover;border-radius:10px;display:block;margin:auto;"/>
+            <strong>Mathias Deumacán</strong>
+            <div class="note">Leader</div>
+          </div>
+          <div class="member">
+            <img src="assets/team/Juanma.webp" srcset="assets/team/Juanma.webp 1x" alt="Juan Manuel Andrade" loading="lazy" width="250" height="250" style="width:150px;height:150px;object-fit:cover;border-radius:10px;display:block;margin:auto;"/>
+            <strong>Juan Manuel Andrade</strong>
+            <div class="note">Builder</div>
+          </div>
+          <div class="member">
+            <img src="assets/team/Gianfranco.webp" srcset="assets/team/Gianfranco.webp 1x" alt="Gianfranco Bano" loading="lazy" width="250" height="250" style="width:150px;height:150px;object-fit:cover;border-radius:10px;display:block;margin:auto;"/>
+            <strong>Gianfranco Bano</strong>
+            <div class="note">Commercial Manager</div>
+          </div>
+          <div class="member">
+            <img src="assets/team/Joaquin.webp" srcset="assets/team/Joaquin.webp 1x" alt="Joaquín Llancaleo" loading="lazy" width="250" height="250" style="width:150px;height:150px;object-fit:cover;border-radius:10px;display:block;margin:auto;"/>
+            <strong>Joaquín Llancaleo</strong>
+            <div class="note">Prototype Designer</div>
+          </div>
+          <div class="member">
+            <img src="assets/team/Francisco.Webp" srcset="assets/team/Francisco.webp 1x" alt="Francisco Ruiz" loading="lazy" width="250" height="250" style="width:150px;height:150px;object-fit:cover;border-radius:10px;display:block;margin:auto;"/>
+            <strong>Francisco Ruiz</strong>
+            <div class="note">Code & App Designer</div>
+          </div>
+        </div>
+
+        <div class="cta" style="margin-top:1rem">
+          <a class="btn" href="https://mail.google.com/mail/?view=cm&fs=1&to=matiasdeumacan@gmail.com&su=Interest%20in%20RootCare&body=Hello%2C%20I%20liked%20the%20proposal.%20Can%20we%20talk%20soon%20to%20get%20more%20information%3F" target="_blank" rel="noopener">Contact via Gmail</a>
+        </div>
+
+        <p class="note" style="margin-top:.6rem">
+          Contact: <a href="mailto:matiasdeumacan@gmail.com">matiasdeumacan@gmail.com</a>
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+          <div>
+            <h3>Want the full interactive version?</h3>
+            <p class="note">Book a demo. We will show the pulse irrigation flow and the sensor setup.</p>
+          </div>
+          <div class="cta">
+            <a class="btn" href="mailto:mathias.deumacan@cloud.uautonoma.cl?subject=RootCare%20Demo">Schedule demo</a>
+            <a class="btn secondary" href="#home">Back to top</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <div class="note">© RootCare – demonstrative prototype. Content and data according to the project document.</div>
+        <div style="display:flex;gap:.8rem">
+          <span class="chip">ESP8266</span>
+          <span class="chip">Pulse irrigation</span>
+          <span class="chip">LCD</span>
+          <span class="chip">Species profiles</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth scroll with sticky header offset
+    const header = document.querySelector('header');
+    const headerH = ()=> header.getBoundingClientRect().height;
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click',e=>{
+        const id = a.getAttribute('href');
+        const el = document.querySelector(id);
+        if(el){
+          e.preventDefault();
+          const top = el.getBoundingClientRect().top + window.pageYOffset - (headerH()+8);
+          window.scrollTo({top,behavior:'smooth'});
+        }
+      })
+    });
+
+    // Feature tabs
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(t=>t.addEventListener('click',()=>{
+      tabs.forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      ['auto','remote','quick'].forEach(id=>{
+        const pane = document.getElementById('pane-'+id);
+        if(pane) pane.style.display = (t.dataset.pane===id)?'block':'none';
+      });
+    }));
+
+    // Stepper auto-advance demo
+    const steps = document.querySelectorAll('.step');
+    let idx=0; setInterval(()=>{steps.forEach(s=>s.classList.remove('active')); if(steps.length){steps[idx%steps.length].classList.add('active'); idx++;}}, 2200);
+
+    // Reveal on scroll
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){ e.target.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'translateY(0)'}],{duration:500,fill:'forwards'}); }
+      });
+    },{threshold:.12});
+    document.querySelectorAll('section .container, .card, .tile, .member').forEach(el=>io.observe(el));
+
+    // Mobile menu toggle
+    const toggleBtn = document.querySelector('.nav-toggle');
+    const navLinks = document.getElementById('primary-nav');
+    toggleBtn?.addEventListener('click', ()=>{
+      const open = navLinks.classList.toggle('open');
+      toggleBtn.setAttribute('aria-expanded', open);
+    });
+
+    // Tap support for Ecosystem popup (works without hover)
+    (function(){
+      const pop = document.getElementById('eco-pop');
+      if(!pop) return;
+      document.querySelectorAll('.eco-tile').forEach(tile=>{
+        tile.addEventListener('click', (e)=>{
+          const r = tile.getBoundingClientRect();
+          pop.querySelector('h4').textContent = tile.dataset.title || '';
+          pop.querySelector('p').textContent  = tile.dataset.desc  || '';
+          // Center horizontally under the tile, 8px gap
+          const left = Math.max(8, r.left + r.width/2 - pop.offsetWidth/2);
+          pop.style.left = left + 'px';
+          pop.style.top  = (window.scrollY + r.bottom + 8) + 'px';
+          pop.style.display = 'block';
+          e.stopPropagation();
+        });
+      });
+      document.addEventListener('click', (e)=>{
+        if(!e.target.closest('.eco-tile,#eco-pop')) pop.style.display='none';
+      });
+    })();
+  </script>
+
+  <script src="assets/js/ecosistema.js"></script>
+
+  <section id="brand-footer">
+    <div class="brand-overlay"></div>
+  </section>
+</body>
+</html>
